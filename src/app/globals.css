@@ -87,6 +87,10 @@ body {
     background-clip: text;
   }
 
+  /* Scrollbar invisible — usado en el chat mockup */
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
   .gradient-text-green {
     background: linear-gradient(135deg, #22D3EE 0%, #10B981 100%);
     -webkit-background-clip: text;

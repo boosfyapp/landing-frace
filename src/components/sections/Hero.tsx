@@ -1,5 +1,5 @@
 'use client'
-import { useRef } from 'react'
+import { useRef, useEffect } from 'react'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { CalendarCheck, Check, Bot, Zap, Image as ImageIcon, FileText, Mic, Play } from 'lucide-react'
 import { LINKS } from '@/lib/constants'
@@ -159,6 +159,19 @@ function ChatBubble({ bubble }: { bubble: Bubble }) {
 }
 
 function WAChatMockup({ compact = false }: { compact?: boolean }) {
+  const bottomRef = useRef<HTMLDivElement>(null)
+
+  // Scroll to bottom right after each bubble finishes animating in
+  useEffect(() => {
+    const timers = CHAT_BUBBLES.map((bubble) =>
+      setTimeout(
+        () => bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }),
+        (bubble.delay + 0.45) * 1000
+      )
+    )
+    return () => timers.forEach(clearTimeout)
+  }, [])
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 24 }}
@@ -182,11 +195,15 @@ function WAChatMockup({ compact = false }: { compact?: boolean }) {
         <div className="text-xs bg-brand-cyan/15 text-brand-cyan px-2 py-0.5 rounded-full font-bold">IA</div>
       </div>
 
-      {/* Messages */}
-      <div className={`p-3 space-y-2.5 overflow-hidden ${compact ? 'max-h-[260px]' : 'min-h-[240px]'}`}>
+      {/* Messages — altura fija, auto-scroll invisible */}
+      <div
+        className={`p-3 space-y-2.5 overflow-y-scroll no-scrollbar ${compact ? 'h-[260px]' : 'h-[300px]'}`}
+      >
         {CHAT_BUBBLES.map((bubble, i) => (
           <ChatBubble key={i} bubble={bubble} />
         ))}
+        {/* Anchor: scroll target */}
+        <div ref={bottomRef} className="h-px" />
       </div>
 
       {/* Input */}
