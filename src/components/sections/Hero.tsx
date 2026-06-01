@@ -1,6 +1,6 @@
 'use client'
-import { useRef, useEffect } from 'react'
-import { motion, useScroll, useTransform } from 'framer-motion'
+import React, { useRef, useEffect } from 'react'
+import { motion, useScroll, useTransform, useInView } from 'framer-motion'
 import { CalendarCheck, Check, Bot, Zap, Image as ImageIcon, FileText, Mic, Play } from 'lucide-react'
 import { LINKS } from '@/lib/constants'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
@@ -31,16 +31,17 @@ interface Bubble {
   docName?: string
 }
 
+// Delays relativos al momento en que el chat entra en viewport
 const CHAT_BUBBLES: Bubble[] = [
-  { side: 'left',  type: 'text',     text: 'Hola, me interesa una cita',                                           time: '09:14', delay: 0.8 },
-  { side: 'right', type: 'text',     text: '¡Hola! Con gusto agendo tu cita. ¿Cuál es tu nombre?',                 time: '09:14', delay: 1.7,  isAI: true },
-  { side: 'left',  type: 'text',     text: 'Soy Carlos García',                                                     time: '09:15', delay: 2.8 },
-  { side: 'right', type: 'image',    text: 'Te comparto nuestro catálogo de servicios 📎',                          time: '09:15', delay: 3.8,  isAI: true, imageLabel: 'Catálogo 2024' },
-  { side: 'left',  type: 'audio',    audioDuration: '0:09',                                                         time: '09:16', delay: 5.0 },
-  { side: 'right', type: 'text',     text: 'Escuché tu nota 🎧 Entendido, te agendo el martes 10am.',              time: '09:16', delay: 6.2,  isAI: true },
-  { side: 'right', type: 'document', text: 'Aquí tu confirmación de cita:',                                         time: '09:16', delay: 7.2,  isAI: true, docName: 'Confirmacion_cita.pdf' },
-  { side: 'left',  type: 'text',     text: '¡Perfecto, muchas gracias! 🙏',                                         time: '09:17', delay: 8.4 },
-  { side: 'right', type: 'text',     text: '¡Nos vemos el martes! Recibirás un recordatorio automático 🔔',         time: '09:17', delay: 9.4,  isAI: true },
+  { side: 'left',  type: 'text',     text: 'Hola, me interesa una cita',                                time: '09:14', delay: 0.4  },
+  { side: 'right', type: 'text',     text: '¡Hola! Con gusto agendo tu cita. ¿Cuál es tu nombre?',      time: '09:14', delay: 1.3,  isAI: true },
+  { side: 'left',  type: 'text',     text: 'Soy Carlos García',                                          time: '09:15', delay: 2.3  },
+  { side: 'right', type: 'image',    text: 'Te comparto nuestro catálogo de servicios 📎',               time: '09:15', delay: 3.3,  isAI: true, imageLabel: 'Catálogo 2024' },
+  { side: 'left',  type: 'audio',    audioDuration: '0:09',                                              time: '09:16', delay: 4.5  },
+  { side: 'right', type: 'text',     text: 'Escuché tu nota 🎧 Entendido, te agendo el martes 10am.',   time: '09:16', delay: 5.7,  isAI: true },
+  { side: 'right', type: 'document', text: 'Aquí tu confirmación de cita:',                              time: '09:16', delay: 6.7,  isAI: true, docName: 'Confirmacion_cita.pdf' },
+  { side: 'left',  type: 'text',     text: '¡Perfecto, muchas gracias! 🙏',                              time: '09:17', delay: 7.8  },
+  { side: 'right', type: 'text',     text: '¡Nos vemos el martes! Recibirás un recordatorio automático 🔔', time: '09:17', delay: 8.8, isAI: true },
 ]
 
 function ImageBubble({ label }: { label: string }) {
@@ -159,24 +160,39 @@ function ChatBubble({ bubble }: { bubble: Bubble }) {
 }
 
 function WAChatMockup({ compact = false }: { compact?: boolean }) {
-  const bottomRef = useRef<HTMLDivElement>(null)
+  const wrapperRef = useRef<HTMLDivElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [visibleCount, setVisibleCount] = React.useState(0)
+  const started = useRef(false)
 
-  // Scroll to bottom right after each bubble finishes animating in
+  // Trigger only once when the chat enters the viewport
+  const inView = useInView(wrapperRef, { once: true, margin: '0px 0px -80px 0px' })
+
   useEffect(() => {
-    const timers = CHAT_BUBBLES.map((bubble) =>
-      setTimeout(
-        () => bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }),
-        (bubble.delay + 0.45) * 1000
-      )
+    if (!inView || started.current) return
+    started.current = true
+
+    const timers = CHAT_BUBBLES.map((bubble, i) =>
+      setTimeout(() => {
+        setVisibleCount(i + 1)
+        requestAnimationFrame(() => {
+          const el = containerRef.current
+          if (el) el.scrollTop = el.scrollHeight
+        })
+      }, bubble.delay * 1000)
     )
+
     return () => timers.forEach(clearTimeout)
-  }, [])
+  }, [inView])
+
+  const visibleBubbles = CHAT_BUBBLES.slice(0, visibleCount)
 
   return (
     <motion.div
+      ref={wrapperRef}
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.6, duration: 0.7 }}
+      transition={{ delay: 0.3, duration: 0.6 }}
       className={`glass rounded-2xl border border-border/80 overflow-hidden ${!compact ? 'animate-float' : ''}`}
       style={!compact ? { animationDelay: '0.5s' } : {}}
     >
@@ -195,15 +211,15 @@ function WAChatMockup({ compact = false }: { compact?: boolean }) {
         <div className="text-xs bg-brand-cyan/15 text-brand-cyan px-2 py-0.5 rounded-full font-bold">IA</div>
       </div>
 
-      {/* Messages — altura fija, auto-scroll invisible */}
+      {/* Messages — fixed height, el contenedor scrollea internamente, sin scrollbar visible */}
       <div
-        className={`p-3 space-y-2.5 overflow-y-scroll no-scrollbar ${compact ? 'h-[260px]' : 'h-[300px]'}`}
+        ref={containerRef}
+        className={`p-3 space-y-2.5 no-scrollbar ${compact ? 'h-[260px]' : 'h-[300px]'}`}
+        style={{ overflowY: 'scroll' }}
       >
-        {CHAT_BUBBLES.map((bubble, i) => (
+        {visibleBubbles.map((bubble, i) => (
           <ChatBubble key={i} bubble={bubble} />
         ))}
-        {/* Anchor: scroll target */}
-        <div ref={bottomRef} className="h-px" />
       </div>
 
       {/* Input */}
