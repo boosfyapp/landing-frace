@@ -19,7 +19,7 @@ const AFTER = [
 
 export function ProblemSolution() {
   return (
-    <section id="problema" className="py-24 lg:py-32 bg-bg-2">
+    <section id="problema" className="py-24 lg:py-32 bg-bg-2 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <ScrollReveal className="text-center mb-16">
           <span className="section-label mb-4">La transformación</span>

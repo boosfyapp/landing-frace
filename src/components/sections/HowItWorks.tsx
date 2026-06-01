@@ -14,7 +14,7 @@ export function HowItWorks() {
   const lineHeight = useTransform(scrollYProgress, [0, 1], ['0%', '100%'])
 
   return (
-    <section id="proceso" className="py-24 lg:py-32 bg-bg" ref={sectionRef}>
+    <section id="proceso" className="py-24 lg:py-32 bg-bg overflow-hidden" ref={sectionRef}>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <ScrollReveal className="text-center mb-16">
           <span className="section-label mb-4">Implementación rápida</span>
