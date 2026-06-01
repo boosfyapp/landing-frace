@@ -1,7 +1,7 @@
 'use client'
 import { useRef } from 'react'
 import { motion, useScroll, useTransform } from 'framer-motion'
-import { CalendarCheck, Check, Bot, Zap } from 'lucide-react'
+import { CalendarCheck, Check, Bot, Zap, Image as ImageIcon, FileText, Mic, Play } from 'lucide-react'
 import { LINKS } from '@/lib/constants'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 
@@ -17,34 +17,157 @@ const TRUST_BULLETS = [
   'Sin contrato forzoso · Sin conocimientos técnicos',
 ]
 
-const CHAT_BUBBLES = [
-  { side: 'left', text: 'Hola, me interesa una cita', time: '09:14', delay: 0.8 },
-  {
-    side: 'right',
-    text: '¡Hola! Con gusto agendo tu cita. ¿Cuál es tu nombre?',
-    time: '09:14',
-    isAI: true,
-    delay: 1.3,
-  },
-  { side: 'left', text: 'Soy Carlos García', time: '09:15', delay: 1.7 },
-  {
-    side: 'right',
-    text: 'Perfecto Carlos 👋 Tenemos el martes 10am o el jueves 4pm. ¿Cuál prefieres?',
-    time: '09:15',
-    isAI: true,
-    delay: 2.1,
-  },
+type BubbleType = 'text' | 'image' | 'audio' | 'document'
+
+interface Bubble {
+  side: 'left' | 'right'
+  type: BubbleType
+  text?: string
+  time: string
+  delay: number
+  isAI?: boolean
+  imageLabel?: string
+  audioDuration?: string
+  docName?: string
+}
+
+const CHAT_BUBBLES: Bubble[] = [
+  { side: 'left',  type: 'text',     text: 'Hola, me interesa una cita',                                           time: '09:14', delay: 0.8 },
+  { side: 'right', type: 'text',     text: '¡Hola! Con gusto agendo tu cita. ¿Cuál es tu nombre?',                 time: '09:14', delay: 1.7,  isAI: true },
+  { side: 'left',  type: 'text',     text: 'Soy Carlos García',                                                     time: '09:15', delay: 2.8 },
+  { side: 'right', type: 'image',    text: 'Te comparto nuestro catálogo de servicios 📎',                          time: '09:15', delay: 3.8,  isAI: true, imageLabel: 'Catálogo 2024' },
+  { side: 'left',  type: 'audio',    audioDuration: '0:09',                                                         time: '09:16', delay: 5.0 },
+  { side: 'right', type: 'text',     text: 'Escuché tu nota 🎧 Entendido, te agendo el martes 10am.',              time: '09:16', delay: 6.2,  isAI: true },
+  { side: 'right', type: 'document', text: 'Aquí tu confirmación de cita:',                                         time: '09:16', delay: 7.2,  isAI: true, docName: 'Confirmacion_cita.pdf' },
+  { side: 'left',  type: 'text',     text: '¡Perfecto, muchas gracias! 🙏',                                         time: '09:17', delay: 8.4 },
+  { side: 'right', type: 'text',     text: '¡Nos vemos el martes! Recibirás un recordatorio automático 🔔',         time: '09:17', delay: 9.4,  isAI: true },
 ]
 
-function WAChatMockup() {
+function ImageBubble({ label }: { label: string }) {
+  return (
+    <div className="rounded-xl overflow-hidden">
+      <div className="w-full h-20 bg-gradient-to-br from-brand-purple/30 to-brand-cyan/20 flex flex-col items-center justify-center gap-1 border border-white/10 rounded-t-xl">
+        <ImageIcon size={18} className="text-brand-cyan/70" />
+        <span style={{ fontSize: '9px' }} className="text-tx-3">{label}</span>
+      </div>
+    </div>
+  )
+}
+
+function AudioBubble({ duration, isLeft }: { duration: string; isLeft: boolean }) {
+  const bars = [3, 5, 8, 6, 10, 7, 4, 9, 6, 8, 5, 7, 4, 6, 8, 5, 7, 4, 6, 3]
+  return (
+    <div className="flex items-center gap-2 px-1 py-0.5">
+      <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${isLeft ? 'bg-surface-2' : 'bg-brand-cyan/20'}`}>
+        <Play size={9} className={isLeft ? 'text-tx-2' : 'text-brand-cyan'} />
+      </div>
+      <div className="flex items-center gap-px h-6">
+        {bars.map((h, i) => (
+          <div
+            key={i}
+            className={`w-0.5 rounded-full ${isLeft ? 'bg-tx-3' : 'bg-brand-cyan/60'}`}
+            style={{ height: `${h}px` }}
+          />
+        ))}
+      </div>
+      <span style={{ fontSize: '9px' }} className="text-tx-3 flex-shrink-0">{duration}</span>
+      <Mic size={9} className="text-tx-3 flex-shrink-0" />
+    </div>
+  )
+}
+
+function DocumentBubble({ name, isLeft }: { name: string; isLeft: boolean }) {
+  return (
+    <div className={`flex items-center gap-2 p-2 rounded-xl border ${isLeft ? 'border-border/60 bg-surface/40' : 'border-brand-cyan/15 bg-brand-cyan/5'}`}>
+      <div className="w-7 h-7 rounded-lg bg-red-500/20 flex items-center justify-center flex-shrink-0">
+        <FileText size={13} className="text-red-400" />
+      </div>
+      <div className="min-w-0">
+        <p style={{ fontSize: '9px' }} className="text-tx-1 font-semibold truncate">{name}</p>
+        <p style={{ fontSize: '8px' }} className="text-tx-3">PDF · 42 KB</p>
+      </div>
+    </div>
+  )
+}
+
+function ChatBubble({ bubble }: { bubble: Bubble }) {
+  const isLeft = bubble.side === 'left'
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: isLeft ? -14 : 14, y: 4 }}
+      animate={{ opacity: 1, x: 0, y: 0 }}
+      transition={{ delay: bubble.delay, duration: 0.35, ease: 'easeOut' }}
+      className={`flex ${isLeft ? 'justify-start' : 'justify-end'}`}
+    >
+      <div
+        className={`rounded-2xl overflow-hidden ${
+          bubble.type === 'image' ? 'w-44' : 'max-w-[82%]'
+        } ${
+          isLeft
+            ? 'bg-surface rounded-tl-sm'
+            : 'bg-brand-cyan/15 rounded-tr-sm'
+        } ${bubble.type !== 'image' ? 'px-3 py-2' : ''}`}
+      >
+        {bubble.isAI && bubble.type !== 'image' && (
+          <div className="flex items-center gap-1 mb-1">
+            <Bot size={9} className="text-brand-cyan" />
+            <span className="text-brand-cyan" style={{ fontSize: '8px', fontWeight: 800 }}>IA</span>
+          </div>
+        )}
+
+        {bubble.type === 'image' && (
+          <>
+            {bubble.isAI && (
+              <div className="flex items-center gap-1 px-3 pt-2 mb-1">
+                <Bot size={9} className="text-brand-cyan" />
+                <span className="text-brand-cyan" style={{ fontSize: '8px', fontWeight: 800 }}>IA</span>
+              </div>
+            )}
+            {bubble.text && (
+              <p className="text-xs text-tx-1 leading-relaxed px-3 pb-1">{bubble.text}</p>
+            )}
+            <ImageBubble label={bubble.imageLabel ?? ''} />
+          </>
+        )}
+
+        {bubble.type === 'audio' && (
+          <AudioBubble duration={bubble.audioDuration ?? '0:00'} isLeft={isLeft} />
+        )}
+
+        {bubble.type === 'document' && (
+          <>
+            {bubble.text && (
+              <p className="text-xs text-tx-1 leading-relaxed mb-1.5">{bubble.text}</p>
+            )}
+            <DocumentBubble name={bubble.docName ?? 'documento.pdf'} isLeft={isLeft} />
+          </>
+        )}
+
+        {bubble.type === 'text' && (
+          <p className="text-xs text-tx-1 leading-relaxed">{bubble.text}</p>
+        )}
+
+        <p
+          className={`text-tx-3 mt-0.5 text-right ${bubble.type === 'image' ? 'px-3 pb-2' : ''}`}
+          style={{ fontSize: '8px' }}
+        >
+          {bubble.time}
+        </p>
+      </div>
+    </motion.div>
+  )
+}
+
+function WAChatMockup({ compact = false }: { compact?: boolean }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.6, duration: 0.7 }}
-      className="glass rounded-2xl border border-border/80 overflow-hidden animate-float"
-      style={{ animationDelay: '0.5s' }}
+      className={`glass rounded-2xl border border-border/80 overflow-hidden ${!compact ? 'animate-float' : ''}`}
+      style={!compact ? { animationDelay: '0.5s' } : {}}
     >
+      {/* Header */}
       <div className="bg-surface/80 px-4 py-3 flex items-center gap-3 border-b border-border/60">
         <div className="w-8 h-8 rounded-full bg-brand-wa/20 flex items-center justify-center">
           {WA_ICON}
@@ -59,36 +182,15 @@ function WAChatMockup() {
         <div className="text-xs bg-brand-cyan/15 text-brand-cyan px-2 py-0.5 rounded-full font-bold">IA</div>
       </div>
 
-      <div className="p-4 space-y-3 min-h-[200px]">
+      {/* Messages */}
+      <div className={`p-3 space-y-2.5 overflow-hidden ${compact ? 'max-h-[260px]' : 'min-h-[240px]'}`}>
         {CHAT_BUBBLES.map((bubble, i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0, x: bubble.side === 'left' ? -16 : 16 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: bubble.delay, duration: 0.4 }}
-            className={`flex ${bubble.side === 'right' ? 'justify-end' : 'justify-start'}`}
-          >
-            <div
-              className={`max-w-[80%] rounded-2xl px-3 py-2 ${bubble.side === 'right' ? 'bg-brand-cyan/15' : 'bg-surface'}`}
-            >
-              {bubble.isAI && (
-                <div className="flex items-center gap-1 mb-1">
-                  <Bot size={10} className="text-brand-cyan" />
-                  <span className="text-brand-cyan" style={{ fontSize: '9px', fontWeight: 800 }}>
-                    IA
-                  </span>
-                </div>
-              )}
-              <p className="text-xs text-tx-1 leading-relaxed">{bubble.text}</p>
-              <p className="text-tx-3 mt-0.5 text-right" style={{ fontSize: '9px' }}>
-                {bubble.time}
-              </p>
-            </div>
-          </motion.div>
+          <ChatBubble key={i} bubble={bubble} />
         ))}
       </div>
 
-      <div className="px-4 py-2 border-t border-border/60 bg-surface/40">
+      {/* Input */}
+      <div className="px-3 py-2 border-t border-border/60 bg-surface/40">
         <div className="flex items-center gap-2 bg-bg rounded-xl px-3 py-2">
           <span className="text-xs text-tx-3 flex-1">Respuesta automática en segundos...</span>
           <div className="flex gap-1">
@@ -102,14 +204,14 @@ function WAChatMockup() {
   )
 }
 
-function CRMMini() {
+function CRMMini({ compact = false }: { compact?: boolean }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 1.0, duration: 0.6 }}
-      className="glass rounded-xl border border-border/70 p-4 animate-float"
-      style={{ animationDelay: '2s' }}
+      transition={{ delay: compact ? 1.0 : 1.2, duration: 0.6 }}
+      className={`glass rounded-xl border border-border/70 p-4 ${!compact ? 'animate-float' : ''}`}
+      style={!compact ? { animationDelay: '2s' } : {}}
     >
       <div className="flex items-center justify-between mb-3">
         <span className="text-xs font-bold text-tx-1">Pipeline de ventas</span>
@@ -117,17 +219,15 @@ function CRMMini() {
       </div>
       <div className="flex gap-2">
         {[
-          { label: 'Nuevo', count: 12, color: 'bg-brand-cyan' },
-          { label: 'Contactado', count: 8, color: 'bg-brand-purple' },
-          { label: 'Propuesta', count: 5, color: 'bg-yellow-400' },
-          { label: 'Cerrado', count: 3, color: 'bg-brand-green' },
+          { label: 'Nuevo',      count: 12, color: 'bg-brand-cyan' },
+          { label: 'Contactado', count: 8,  color: 'bg-brand-purple' },
+          { label: 'Propuesta',  count: 5,  color: 'bg-yellow-400' },
+          { label: 'Cerrado',    count: 3,  color: 'bg-brand-green' },
         ].map((col, i) => (
           <div key={i} className="flex-1 text-center">
             <div className={`h-1.5 rounded-full ${col.color} mb-1.5`} />
             <p className="text-xs font-bold text-tx-1">{col.count}</p>
-            <p className="text-tx-3" style={{ fontSize: '9px' }}>
-              {col.label}
-            </p>
+            <p className="text-tx-3" style={{ fontSize: '9px' }}>{col.label}</p>
           </div>
         ))}
       </div>
@@ -168,7 +268,9 @@ export function Hero() {
         style={{ opacity: contentOpacity }}
         className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-0 w-full"
       >
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+        <div className="grid lg:grid-cols-2 gap-10 lg:gap-20 items-center">
+
+          {/* ── Left column — copy ── */}
           <div>
             <motion.div
               initial={{ opacity: 0, y: 16 }}
@@ -274,8 +376,26 @@ export function Hero() {
                 <p className="text-xs text-tx-3 mt-0.5">+500 negocios automatizados</p>
               </div>
             </motion.div>
+
+            {/* ── Mobile mockup (below CTAs) ── */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.0, duration: 0.7 }}
+              className="lg:hidden mt-10 space-y-3"
+            >
+              <div className="flex items-center gap-2">
+                <Zap size={12} className="text-brand-cyan" />
+                <span className="text-xs text-tx-3 font-semibold">
+                  Respondido automáticamente en 2s
+                </span>
+              </div>
+              <WAChatMockup compact />
+              <CRMMini compact />
+            </motion.div>
           </div>
 
+          {/* ── Right column — desktop mockup ── */}
           <div className="hidden lg:flex flex-col gap-4">
             <div className="flex items-center gap-2 justify-end mb-2">
               <Zap size={12} className="text-brand-cyan" />
@@ -286,6 +406,7 @@ export function Hero() {
             <WAChatMockup />
             <CRMMini />
           </div>
+
         </div>
       </motion.div>
     </section>
