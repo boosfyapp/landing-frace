@@ -244,171 +244,256 @@ export function Hero() {
     offset: ['start start', 'end start'],
   })
 
-  const orbY1 = useTransform(scrollYProgress, [0, 1], ['0%', isDesktop ? '-30%' : '0%'])
-  const orbY2 = useTransform(scrollYProgress, [0, 1], ['0%', isDesktop ? '-15%' : '0%'])
-  const contentOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0])
+  // Parallax orbs — desktop only
+  const orbY1 = useTransform(scrollYProgress, [0, 1], ['0%', '-28%'])
+  const orbY2 = useTransform(scrollYProgress, [0, 1], ['0%', '-14%'])
+  // Fade text content on desktop only — NOT applied to mobile mockup
+  const contentOpacity = useTransform(scrollYProgress, [0, 0.6], [1, 0])
 
   return (
     <section
       id="inicio"
       ref={heroRef}
-      className="relative min-h-screen flex items-center pt-16 overflow-hidden bg-bg"
+      className="relative bg-bg overflow-hidden"
     >
+      {/* Background glow */}
       <div className="absolute inset-0 bg-hero-radial pointer-events-none" />
-      <motion.div
-        style={{ y: orbY1 }}
-        className="absolute top-20 right-1/4 w-[500px] h-[500px] rounded-full bg-brand-purple/10 blur-[100px] pointer-events-none"
-      />
-      <motion.div
-        style={{ y: orbY2 }}
-        className="absolute bottom-20 left-1/4 w-[400px] h-[400px] rounded-full bg-brand-cyan/8 blur-[80px] pointer-events-none"
-      />
 
+      {/* Parallax orbs — clipped inside section */}
+      {isDesktop && (
+        <>
+          <motion.div
+            style={{ y: orbY1 }}
+            className="absolute top-20 right-[10%] w-[420px] h-[420px] rounded-full bg-brand-purple/10 blur-[90px] pointer-events-none"
+          />
+          <motion.div
+            style={{ y: orbY2 }}
+            className="absolute bottom-10 left-[10%] w-[320px] h-[320px] rounded-full bg-brand-cyan/8 blur-[70px] pointer-events-none"
+          />
+        </>
+      )}
+
+      {/* ── DESKTOP: two-column with opacity fade on scroll ── */}
       <motion.div
-        style={{ opacity: contentOpacity }}
-        className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-0 w-full"
+        style={isDesktop ? { opacity: contentOpacity } : undefined}
+        className="hidden lg:block relative max-w-7xl mx-auto px-6 lg:px-8 pt-32 pb-20"
       >
-        <div className="grid lg:grid-cols-2 gap-10 lg:gap-20 items-center">
-
-          {/* ── Left column — copy ── */}
-          <div>
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1, duration: 0.6 }}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-cyan/8 border border-brand-cyan/20 mb-8"
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-brand-cyan animate-pulse-dot" />
-              <span className="text-brand-cyan text-xs font-bold uppercase tracking-widest">
-                Usado por +500 PyMEs mexicanas
-              </span>
-            </motion.div>
-
-            <motion.h1
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2, duration: 0.7 }}
-              className="text-4xl sm:text-5xl lg:text-6xl font-black text-tx-1 leading-[1.05] tracking-tight mb-6"
-            >
-              Automatiza tu WhatsApp.
-              <br />
-              <span className="gradient-text">Cierra más ventas,</span>
-              <br />
-              sin contratar a nadie más.
-            </motion.h1>
-
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.35, duration: 0.6 }}
-              className="text-lg text-tx-2 mb-8 leading-relaxed max-w-xl"
-            >
-              Frace Solutions crea tu asistente IA personalizado conectado a Boosfy para responder,
-              agendar, dar seguimiento y organizar tus ventas desde WhatsApp.
-            </motion.p>
-
-            <motion.ul
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.45, duration: 0.6 }}
-              className="space-y-2.5 mb-10"
-            >
-              {TRUST_BULLETS.map((b, i) => (
-                <li key={i} className="flex items-center gap-3">
-                  <div className="w-5 h-5 rounded-full bg-brand-cyan/15 flex items-center justify-center flex-shrink-0">
-                    <Check size={11} className="text-brand-cyan" />
-                  </div>
-                  <span className="text-sm text-tx-2">{b}</span>
-                </li>
-              ))}
-            </motion.ul>
-
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.55, duration: 0.6 }}
-              className="flex flex-col sm:flex-row gap-4"
-            >
-              <a
-                href={LINKS.calendly}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 px-7 py-4 rounded-xl bg-brand-cyan text-bg font-black text-base hover:bg-brand-cyan-dim transition-colors shadow-glow-cyan cursor-pointer"
-              >
-                <CalendarCheck size={18} />
-                Agendar demo de 15 min
-              </a>
-              <a
-                href={LINKS.whatsapp}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 px-7 py-4 rounded-xl border border-border-2 text-tx-2 font-bold text-base hover:border-brand-wa/40 hover:text-brand-wa transition-colors cursor-pointer"
-              >
-                {WA_ICON}
-                Hablar por WhatsApp
-              </a>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.8, duration: 0.6 }}
-              className="flex items-center gap-4 mt-8"
-            >
-              <div className="flex -space-x-2">
-                {['CG', 'CM', 'DG', 'AR', 'LP'].map((init, i) => (
-                  <div
-                    key={i}
-                    className="w-7 h-7 rounded-full bg-surface border-2 border-bg flex items-center justify-center text-xs font-bold text-tx-2"
-                  >
-                    {init}
-                  </div>
-                ))}
-              </div>
-              <div>
-                <div className="flex gap-0.5">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <svg key={i} viewBox="0 0 12 12" fill="currentColor" className="w-3 h-3 text-yellow-400">
-                      <path d="M6 1l1.5 3 3.5.5-2.5 2.5.5 3.5L6 9 3 10.5l.5-3.5L1 4.5 4.5 4z" />
-                    </svg>
-                  ))}
-                </div>
-                <p className="text-xs text-tx-3 mt-0.5">+500 negocios automatizados</p>
-              </div>
-            </motion.div>
-
-            {/* ── Mobile mockup (below CTAs) ── */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.0, duration: 0.7 }}
-              className="lg:hidden mt-10 space-y-3"
-            >
-              <div className="flex items-center gap-2">
-                <Zap size={12} className="text-brand-cyan" />
-                <span className="text-xs text-tx-3 font-semibold">
-                  Respondido automáticamente en 2s
-                </span>
-              </div>
-              <WAChatMockup compact />
-              <CRMMini compact />
-            </motion.div>
-          </div>
-
-          {/* ── Right column — desktop mockup ── */}
-          <div className="hidden lg:flex flex-col gap-4">
+        <div className="grid lg:grid-cols-2 gap-20 items-center">
+          {/* Left — copy */}
+          <DesktopCopy />
+          {/* Right — mockup */}
+          <div className="flex flex-col gap-4">
             <div className="flex items-center gap-2 justify-end mb-2">
               <Zap size={12} className="text-brand-cyan" />
-              <span className="text-xs text-tx-3 font-semibold">
-                Respondido automáticamente en 2s
-              </span>
+              <span className="text-xs text-tx-3 font-semibold">Respondido automáticamente en 2s</span>
             </div>
             <WAChatMockup />
             <CRMMini />
           </div>
-
         </div>
       </motion.div>
+
+      {/* ── MOBILE: stacked, NO opacity fade ever ── */}
+      <div className="lg:hidden relative max-w-xl mx-auto px-4 pt-24 pb-10">
+        <MobileCopy />
+        {/* Mockup — always at full opacity, never fades */}
+        <div className="mt-8 space-y-3">
+          <div className="flex items-center gap-2">
+            <Zap size={12} className="text-brand-cyan" />
+            <span className="text-xs text-tx-3 font-semibold">Respondido automáticamente en 2s</span>
+          </div>
+          <WAChatMockup compact />
+          <CRMMini compact />
+        </div>
+      </div>
     </section>
+  )
+}
+
+/* ── Shared copy blocks split to avoid duplication ── */
+
+function DesktopCopy() {
+  return (
+    <div>
+      <motion.div
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0, duration: 0.5 }}
+        className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-cyan/8 border border-brand-cyan/20 mb-7"
+      >
+        <span className="w-1.5 h-1.5 rounded-full bg-brand-cyan animate-pulse-dot" />
+        <span className="text-brand-cyan text-xs font-bold uppercase tracking-widest">
+          Usado por +500 PyMEs mexicanas
+        </span>
+      </motion.div>
+
+      <motion.h1
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1, duration: 0.55 }}
+        className="text-5xl lg:text-6xl font-black text-tx-1 leading-[1.05] tracking-tight mb-5"
+      >
+        Automatiza tu WhatsApp.
+        <br />
+        <span className="gradient-text">Cierra más ventas,</span>
+        <br />
+        sin contratar a nadie más.
+      </motion.h1>
+
+      <motion.p
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2, duration: 0.5 }}
+        className="text-lg text-tx-2 mb-7 leading-relaxed max-w-xl"
+      >
+        Frace Solutions crea tu asistente IA personalizado conectado a Boosfy para responder,
+        agendar, dar seguimiento y organizar tus ventas desde WhatsApp.
+      </motion.p>
+
+      <motion.ul
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.28, duration: 0.5 }}
+        className="space-y-2.5 mb-9"
+      >
+        {TRUST_BULLETS.map((b, i) => (
+          <li key={i} className="flex items-center gap-3">
+            <div className="w-5 h-5 rounded-full bg-brand-cyan/15 flex items-center justify-center flex-shrink-0">
+              <Check size={11} className="text-brand-cyan" />
+            </div>
+            <span className="text-sm text-tx-2">{b}</span>
+          </li>
+        ))}
+      </motion.ul>
+
+      <motion.div
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.36, duration: 0.5 }}
+        className="flex flex-row gap-4"
+      >
+        <CTAButtons />
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.5, duration: 0.5 }}
+        className="flex items-center gap-4 mt-7"
+      >
+        <TrustAvatars />
+      </motion.div>
+    </div>
+  )
+}
+
+function MobileCopy() {
+  return (
+    <div>
+      <motion.div
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0, duration: 0.45 }}
+        className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-cyan/8 border border-brand-cyan/20 mb-6"
+      >
+        <span className="w-1.5 h-1.5 rounded-full bg-brand-cyan animate-pulse-dot" />
+        <span className="text-brand-cyan text-xs font-bold uppercase tracking-widest">
+          +500 PyMEs mexicanas
+        </span>
+      </motion.div>
+
+      <motion.h1
+        initial={{ opacity: 0, y: 18 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.08, duration: 0.5 }}
+        className="text-4xl sm:text-5xl font-black text-tx-1 leading-[1.08] tracking-tight mb-5"
+      >
+        Automatiza tu WhatsApp.
+        <br />
+        <span className="gradient-text">Cierra más ventas,</span>
+        <br />
+        sin contratar a nadie.
+      </motion.h1>
+
+      <motion.p
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.16, duration: 0.45 }}
+        className="text-base text-tx-2 mb-7 leading-relaxed"
+      >
+        Asistente IA personalizado conectado a Boosfy para responder, agendar y organizar
+        tus ventas desde WhatsApp.
+      </motion.p>
+
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.24, duration: 0.45 }}
+        className="flex flex-col gap-3"
+      >
+        <CTAButtons />
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.38, duration: 0.45 }}
+        className="flex items-center gap-4 mt-6"
+      >
+        <TrustAvatars />
+      </motion.div>
+    </div>
+  )
+}
+
+function CTAButtons() {
+  return (
+    <>
+      <a
+        href={LINKS.calendly}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center justify-center gap-2 px-7 py-4 rounded-xl bg-brand-cyan text-bg font-black text-base hover:bg-brand-cyan-dim transition-colors shadow-glow-cyan cursor-pointer"
+      >
+        <CalendarCheck size={18} />
+        Agendar demo de 15 min
+      </a>
+      <a
+        href={LINKS.whatsapp}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center justify-center gap-2 px-7 py-4 rounded-xl border border-border-2 text-tx-2 font-bold text-base hover:border-brand-wa/40 hover:text-brand-wa transition-colors cursor-pointer"
+      >
+        {WA_ICON}
+        WhatsApp
+      </a>
+    </>
+  )
+}
+
+function TrustAvatars() {
+  return (
+    <>
+      <div className="flex -space-x-2">
+        {['CG', 'CM', 'DG', 'AR', 'LP'].map((init, i) => (
+          <div
+            key={i}
+            className="w-7 h-7 rounded-full bg-surface border-2 border-bg flex items-center justify-center text-xs font-bold text-tx-2"
+          >
+            {init}
+          </div>
+        ))}
+      </div>
+      <div>
+        <div className="flex gap-0.5">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <svg key={i} viewBox="0 0 12 12" fill="currentColor" className="w-3 h-3 text-yellow-400">
+              <path d="M6 1l1.5 3 3.5.5-2.5 2.5.5 3.5L6 9 3 10.5l.5-3.5L1 4.5 4.5 4z" />
+            </svg>
+          ))}
+        </div>
+        <p className="text-xs text-tx-3 mt-0.5">+500 negocios automatizados</p>
+      </div>
+    </>
   )
 }
