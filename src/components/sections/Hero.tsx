@@ -153,7 +153,7 @@ function WAChatMockup({ compact = false }: { compact?: boolean }) {
   const [offsetY, setOffsetY]           = React.useState(0)
   const started = useRef(false)
 
-  const inView = useInView(wrapperRef, { once: true, margin: '0px 0px -60px 0px' })
+  const inView = useInView(wrapperRef, { once: true, margin: '0px 0px -220px 0px' })
 
   // Recalculate how much to shift content UP so the latest message is always visible
   useEffect(() => {

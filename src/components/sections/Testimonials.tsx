@@ -69,20 +69,15 @@ export function Testimonials() {
         </div>
 
         <div className="lg:hidden">
-          <div className="relative overflow-hidden">
-            <AnimatePresence mode="wait" custom={direction}>
+          {/* Fixed-height container prevents layout jump during crossfade */}
+          <div className="relative" style={{ minHeight: '220px' }}>
+            <AnimatePresence mode="wait">
               <motion.div
                 key={active}
-                custom={direction}
-                variants={{
-                  enter: (dir: number) => ({ x: dir > 0 ? 280 : -280, opacity: 0 }),
-                  center: { x: 0, opacity: 1 },
-                  exit: (dir: number) => ({ x: dir < 0 ? 280 : -280, opacity: 0 }),
-                }}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                transition={{ duration: 0.3, ease: 'easeInOut' }}
+                initial={{ opacity: 0, scale: 0.97 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.97 }}
+                transition={{ duration: 0.22, ease: 'easeInOut' }}
                 className="glass-card p-8"
               >
                 <div className="flex gap-0.5 mb-5">
