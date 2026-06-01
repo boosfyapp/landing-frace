@@ -91,22 +91,21 @@ function DocumentBubble({ name, isLeft }: { name: string; isLeft: boolean }) {
   )
 }
 
+// Bubble appears instantly when added to DOM — no framer delay needed
 function ChatBubble({ bubble }: { bubble: Bubble }) {
   const isLeft = bubble.side === 'left'
   return (
     <motion.div
-      initial={{ opacity: 0, x: isLeft ? -14 : 14, y: 4 }}
-      animate={{ opacity: 1, x: 0, y: 0 }}
-      transition={{ delay: bubble.delay, duration: 0.35, ease: 'easeOut' }}
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.28, ease: 'easeOut' }}
       className={`flex ${isLeft ? 'justify-start' : 'justify-end'}`}
     >
       <div
         className={`rounded-2xl overflow-hidden ${
           bubble.type === 'image' ? 'w-44' : 'max-w-[82%]'
         } ${
-          isLeft
-            ? 'bg-surface rounded-tl-sm'
-            : 'bg-brand-cyan/15 rounded-tr-sm'
+          isLeft ? 'bg-surface rounded-tl-sm' : 'bg-brand-cyan/15 rounded-tr-sm'
         } ${bubble.type !== 'image' ? 'px-3 py-2' : ''}`}
       >
         {bubble.isAI && bubble.type !== 'image' && (
@@ -115,7 +114,6 @@ function ChatBubble({ bubble }: { bubble: Bubble }) {
             <span className="text-brand-cyan" style={{ fontSize: '8px', fontWeight: 800 }}>IA</span>
           </div>
         )}
-
         {bubble.type === 'image' && (
           <>
             {bubble.isAI && (
@@ -124,30 +122,18 @@ function ChatBubble({ bubble }: { bubble: Bubble }) {
                 <span className="text-brand-cyan" style={{ fontSize: '8px', fontWeight: 800 }}>IA</span>
               </div>
             )}
-            {bubble.text && (
-              <p className="text-xs text-tx-1 leading-relaxed px-3 pb-1">{bubble.text}</p>
-            )}
+            {bubble.text && <p className="text-xs text-tx-1 leading-relaxed px-3 pb-1">{bubble.text}</p>}
             <ImageBubble label={bubble.imageLabel ?? ''} />
           </>
         )}
-
-        {bubble.type === 'audio' && (
-          <AudioBubble duration={bubble.audioDuration ?? '0:00'} isLeft={isLeft} />
-        )}
-
+        {bubble.type === 'audio' && <AudioBubble duration={bubble.audioDuration ?? '0:00'} isLeft={isLeft} />}
         {bubble.type === 'document' && (
           <>
-            {bubble.text && (
-              <p className="text-xs text-tx-1 leading-relaxed mb-1.5">{bubble.text}</p>
-            )}
+            {bubble.text && <p className="text-xs text-tx-1 leading-relaxed mb-1.5">{bubble.text}</p>}
             <DocumentBubble name={bubble.docName ?? 'documento.pdf'} isLeft={isLeft} />
           </>
         )}
-
-        {bubble.type === 'text' && (
-          <p className="text-xs text-tx-1 leading-relaxed">{bubble.text}</p>
-        )}
-
+        {bubble.type === 'text' && <p className="text-xs text-tx-1 leading-relaxed">{bubble.text}</p>}
         <p
           className={`text-tx-3 mt-0.5 text-right ${bubble.type === 'image' ? 'px-3 pb-2' : ''}`}
           style={{ fontSize: '8px' }}
@@ -160,28 +146,35 @@ function ChatBubble({ bubble }: { bubble: Bubble }) {
 }
 
 function WAChatMockup({ compact = false }: { compact?: boolean }) {
-  const wrapperRef = useRef<HTMLDivElement>(null)
-  const containerRef = useRef<HTMLDivElement>(null)
+  const wrapperRef  = useRef<HTMLDivElement>(null)
+  const innerRef    = useRef<HTMLDivElement>(null)
+  const clipRef     = useRef<HTMLDivElement>(null)
   const [visibleCount, setVisibleCount] = React.useState(0)
+  const [offsetY, setOffsetY]           = React.useState(0)
   const started = useRef(false)
 
-  // Trigger only once when the chat enters the viewport
-  const inView = useInView(wrapperRef, { once: true, margin: '0px 0px -80px 0px' })
+  const inView = useInView(wrapperRef, { once: true, margin: '0px 0px -60px 0px' })
 
+  // Recalculate how much to shift content UP so the latest message is always visible
+  useEffect(() => {
+    if (visibleCount === 0) return
+    // Double RAF: wait for React to paint the new bubble before measuring
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const clip  = clipRef.current
+      const inner = innerRef.current
+      if (!clip || !inner) return
+      const overflow = inner.scrollHeight - clip.clientHeight
+      if (overflow > 0) setOffsetY(overflow)
+    }))
+  }, [visibleCount])
+
+  // Start sequence only when this component enters the viewport
   useEffect(() => {
     if (!inView || started.current) return
     started.current = true
-
     const timers = CHAT_BUBBLES.map((bubble, i) =>
-      setTimeout(() => {
-        setVisibleCount(i + 1)
-        requestAnimationFrame(() => {
-          const el = containerRef.current
-          if (el) el.scrollTop = el.scrollHeight
-        })
-      }, bubble.delay * 1000)
+      setTimeout(() => setVisibleCount(i + 1), bubble.delay * 1000)
     )
-
     return () => timers.forEach(clearTimeout)
   }, [inView])
 
@@ -190,17 +183,15 @@ function WAChatMockup({ compact = false }: { compact?: boolean }) {
   return (
     <motion.div
       ref={wrapperRef}
-      initial={{ opacity: 0, y: 24 }}
+      initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.3, duration: 0.6 }}
-      className={`glass rounded-2xl border border-border/80 overflow-hidden ${!compact ? 'animate-float' : ''}`}
+      transition={{ duration: 0.6, ease: 'easeOut' }}
+      className={`glass rounded-2xl border border-border/80 overflow-hidden select-none ${!compact ? 'animate-float' : ''}`}
       style={!compact ? { animationDelay: '0.5s' } : {}}
     >
       {/* Header */}
       <div className="bg-surface/80 px-4 py-3 flex items-center gap-3 border-b border-border/60">
-        <div className="w-8 h-8 rounded-full bg-brand-wa/20 flex items-center justify-center">
-          {WA_ICON}
-        </div>
+        <div className="w-8 h-8 rounded-full bg-brand-wa/20 flex items-center justify-center">{WA_ICON}</div>
         <div className="flex-1">
           <p className="text-xs font-bold text-tx-1">Tu Negocio</p>
           <div className="flex items-center gap-1">
@@ -211,19 +202,29 @@ function WAChatMockup({ compact = false }: { compact?: boolean }) {
         <div className="text-xs bg-brand-cyan/15 text-brand-cyan px-2 py-0.5 rounded-full font-bold">IA</div>
       </div>
 
-      {/* Messages — fixed height, el contenedor scrollea internamente, sin scrollbar visible */}
+      {/* Clip window — overflow hidden, pointer-events none = no user interaction */}
       <div
-        ref={containerRef}
-        className={`p-3 space-y-2.5 no-scrollbar ${compact ? 'h-[260px]' : 'h-[300px]'}`}
-        style={{ overflowY: 'scroll' }}
+        ref={clipRef}
+        className={compact ? 'h-[260px]' : 'h-[300px]'}
+        style={{ overflow: 'hidden', pointerEvents: 'none' }}
       >
-        {visibleBubbles.map((bubble, i) => (
-          <ChatBubble key={i} bubble={bubble} />
-        ))}
+        {/* Inner track — slides UP as messages fill the window */}
+        <div
+          ref={innerRef}
+          className="p-3 space-y-2.5"
+          style={{
+            transform: `translateY(-${offsetY}px)`,
+            transition: offsetY > 0 ? 'transform 0.45s cubic-bezier(0.4, 0, 0.2, 1)' : 'none',
+          }}
+        >
+          {visibleBubbles.map((bubble, i) => (
+            <ChatBubble key={i} bubble={bubble} />
+          ))}
+        </div>
       </div>
 
-      {/* Input */}
-      <div className="px-3 py-2 border-t border-border/60 bg-surface/40">
+      {/* Input bar */}
+      <div className="px-3 py-2 border-t border-border/60 bg-surface/40" style={{ pointerEvents: 'none' }}>
         <div className="flex items-center gap-2 bg-bg rounded-xl px-3 py-2">
           <span className="text-xs text-tx-3 flex-1">Respuesta automática en segundos...</span>
           <div className="flex gap-1">
