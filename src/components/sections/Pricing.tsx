@@ -156,7 +156,7 @@ export function Pricing() {
                 <div className="lg:text-right">
                   <p className="text-3xl font-black text-tx-1">Consultar</p>
                   <p className="text-xs text-tx-3 mt-0.5">
-                    Pago único personalizado
+                    Pago único
                     <br />
                     Sin mensualidades
                   </p>

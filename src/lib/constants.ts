@@ -1,6 +1,8 @@
 export const LINKS = {
   calendly: 'https://calendly.com/fracesolutions/reunion',
-  whatsapp: 'https://wa.me/message/DGPEYQD3I7OHB1',
+  whatsapp: 'https://wa.me/5213418780011',
+  waStarter: 'https://wa.me/5213418780011?text=Hola%2C%20quiero%20contratar%20el%20Plan%20Starter',
+  waLifetime: 'https://wa.me/5213418780011?text=Hola%2C%20quiero%20informaci%C3%B3n%20sobre%20el%20Plan%20Lifetime',
   mpStarter: 'https://mpago.li/2ELwWJC',
   mpPro: 'https://mpago.li/1ta547h',
   mpUltimate: 'https://mpago.li/28iN2xz',
@@ -20,7 +22,7 @@ export const PLANS = [
     badge: null,
     featured: false,
     cta: 'Elegir Starter →',
-    link: LINKS.whatsapp,
+    link: LINKS.waStarter,
     features: [
       'Asistente IA personalizado',
       'Agenda citas',
@@ -79,7 +81,7 @@ export const LIFETIME_PLAN = {
   name: 'Lifetime',
   badge: 'Pago único',
   cta: 'Consultar Lifetime →',
-  link: LINKS.whatsapp,
+  link: LINKS.waLifetime,
   desc: 'Para negocios que quieren una implementación avanzada, sin mensualidades y con una solución más completa.',
   features: [
     'Todo lo del Ultimate',
