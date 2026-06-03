@@ -1,9 +1,7 @@
 'use client'
-import React, { useRef, useEffect } from 'react'
-import { motion, useScroll, useTransform, useInView } from 'framer-motion'
+import React, { useRef, useEffect, useState } from 'react'
 import { CalendarCheck, Check, Bot, Zap, Image as ImageIcon, FileText, Mic, Play } from 'lucide-react'
 import { LINKS } from '@/lib/constants'
-import { useMediaQuery } from '@/hooks/useMediaQuery'
 
 const WA_ICON = (
   <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4" aria-hidden="true">
@@ -31,17 +29,16 @@ interface Bubble {
   docName?: string
 }
 
-// Delays relativos al momento en que el chat entra en viewport
 const CHAT_BUBBLES: Bubble[] = [
-  { side: 'left',  type: 'text',     text: 'Hola, me interesa una cita',                                time: '09:14', delay: 0.4  },
-  { side: 'right', type: 'text',     text: '¡Hola! Con gusto agendo tu cita. ¿Cuál es tu nombre?',      time: '09:14', delay: 1.3,  isAI: true },
-  { side: 'left',  type: 'text',     text: 'Soy Carlos García',                                          time: '09:15', delay: 2.3  },
-  { side: 'right', type: 'image',    text: 'Te comparto nuestro catálogo de servicios 📎',               time: '09:15', delay: 3.3,  isAI: true, imageLabel: 'Catálogo 2024' },
-  { side: 'left',  type: 'audio',    audioDuration: '0:09',                                              time: '09:16', delay: 4.5  },
-  { side: 'right', type: 'text',     text: 'Escuché tu nota 🎧 Entendido, te agendo el martes 10am.',   time: '09:16', delay: 5.7,  isAI: true },
-  { side: 'right', type: 'document', text: 'Aquí tu confirmación de cita:',                              time: '09:16', delay: 6.7,  isAI: true, docName: 'Confirmacion_cita.pdf' },
-  { side: 'left',  type: 'text',     text: '¡Perfecto, muchas gracias! 🙏',                              time: '09:17', delay: 7.8  },
-  { side: 'right', type: 'text',     text: '¡Nos vemos el martes! Recibirás un recordatorio automático 🔔', time: '09:17', delay: 8.8, isAI: true },
+  { side: 'left',  type: 'text',     text: 'Hola, me interesa una cita',                                    time: '09:14', delay: 0.4  },
+  { side: 'right', type: 'text',     text: '¡Hola! Con gusto agendo tu cita. ¿Cuál es tu nombre?',          time: '09:14', delay: 1.3,  isAI: true },
+  { side: 'left',  type: 'text',     text: 'Soy Carlos García',                                              time: '09:15', delay: 2.3  },
+  { side: 'right', type: 'image',    text: 'Te comparto nuestro catálogo de servicios 📎',                   time: '09:15', delay: 3.3,  isAI: true, imageLabel: 'Catálogo 2024' },
+  { side: 'left',  type: 'audio',    audioDuration: '0:09',                                                  time: '09:16', delay: 4.5  },
+  { side: 'right', type: 'text',     text: 'Escuché tu nota 🎧 Entendido, te agendo el martes 10am.',       time: '09:16', delay: 5.7,  isAI: true },
+  { side: 'right', type: 'document', text: 'Aquí tu confirmación de cita:',                                  time: '09:16', delay: 6.7,  isAI: true, docName: 'Confirmacion_cita.pdf' },
+  { side: 'left',  type: 'text',     text: '¡Perfecto, muchas gracias! 🙏',                                  time: '09:17', delay: 7.8  },
+  { side: 'right', type: 'text',     text: '¡Nos vemos el martes! Recibirás un recordatorio automático 🔔', time: '09:17', delay: 8.8,  isAI: true },
 ]
 
 function ImageBubble({ label }: { label: string }) {
@@ -91,15 +88,12 @@ function DocumentBubble({ name, isLeft }: { name: string; isLeft: boolean }) {
   )
 }
 
-// Bubble appears instantly when added to DOM — no framer delay needed
 function ChatBubble({ bubble }: { bubble: Bubble }) {
   const isLeft = bubble.side === 'left'
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 6 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.28, ease: 'easeOut' }}
+    <div
       className={`flex ${isLeft ? 'justify-start' : 'justify-end'}`}
+      style={{ animation: 'bubble-appear 0.28s ease-out both' }}
     >
       <div
         className={`rounded-2xl overflow-hidden ${
@@ -141,24 +135,34 @@ function ChatBubble({ bubble }: { bubble: Bubble }) {
           {bubble.time}
         </p>
       </div>
-    </motion.div>
+    </div>
   )
 }
 
 function WAChatMockup({ compact = false }: { compact?: boolean }) {
-  const wrapperRef  = useRef<HTMLDivElement>(null)
-  const innerRef    = useRef<HTMLDivElement>(null)
-  const clipRef     = useRef<HTMLDivElement>(null)
-  const [visibleCount, setVisibleCount] = React.useState(0)
-  const [offsetY, setOffsetY]           = React.useState(0)
-  const started = useRef(false)
+  const wrapperRef = useRef<HTMLDivElement>(null)
+  const innerRef   = useRef<HTMLDivElement>(null)
+  const clipRef    = useRef<HTMLDivElement>(null)
+  const started    = useRef(false)
 
-  const inView = useInView(wrapperRef, { once: true, margin: '0px 0px -220px 0px' })
+  const [visibleCount, setVisibleCount] = useState(0)
+  const [offsetY, setOffsetY]           = useState(0)
+  const [inView, setInView]             = useState(false)
 
-  // Recalculate how much to shift content UP so the latest message is always visible
+  // Native IntersectionObserver — no framer-motion dependency
+  useEffect(() => {
+    const el = wrapperRef.current
+    if (!el) return
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setInView(true); obs.disconnect() } },
+      { rootMargin: '0px 0px -220px 0px' }
+    )
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
+
   useEffect(() => {
     if (visibleCount === 0) return
-    // Double RAF: wait for React to paint the new bubble before measuring
     requestAnimationFrame(() => requestAnimationFrame(() => {
       const clip  = clipRef.current
       const inner = innerRef.current
@@ -168,7 +172,6 @@ function WAChatMockup({ compact = false }: { compact?: boolean }) {
     }))
   }, [visibleCount])
 
-  // Start sequence only when this component enters the viewport
   useEffect(() => {
     if (!inView || started.current) return
     started.current = true
@@ -181,143 +184,113 @@ function WAChatMockup({ compact = false }: { compact?: boolean }) {
   const visibleBubbles = CHAT_BUBBLES.slice(0, visibleCount)
 
   return (
-    <motion.div
-      ref={wrapperRef}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, ease: 'easeOut' }}
-      className={`glass rounded-2xl border border-border/80 overflow-hidden select-none ${!compact ? 'animate-float' : ''}`}
-      style={!compact ? { animationDelay: '0.5s' } : {}}
-    >
-      {/* Header */}
-      <div className="bg-surface/80 px-4 py-3 flex items-center gap-3 border-b border-border/60">
-        <div className="w-8 h-8 rounded-full bg-brand-wa/20 flex items-center justify-center">{WA_ICON}</div>
-        <div className="flex-1">
-          <p className="text-xs font-bold text-tx-1">Tu Negocio</p>
-          <div className="flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-brand-green" />
-            <p className="text-xs text-tx-3">Asistente IA activo</p>
-          </div>
-        </div>
-        <div className="text-xs bg-brand-cyan/15 text-brand-cyan px-2 py-0.5 rounded-full font-bold">IA</div>
-      </div>
-
-      {/* Clip window — overflow hidden, pointer-events none = no user interaction */}
+    // Outer wrapper fades in; inner div floats — separate elements avoid animation conflicts
+    <div style={{ animation: 'hero-fade-in-up 0.6s ease-out both' }}>
       <div
-        ref={clipRef}
-        className={compact ? 'h-[260px]' : 'h-[300px]'}
-        style={{ overflow: 'hidden', pointerEvents: 'none' }}
+        ref={wrapperRef}
+        className={`glass rounded-2xl border border-border/80 overflow-hidden select-none ${!compact ? 'animate-float' : ''}`}
+        style={!compact ? { animationDelay: '0.5s' } : {}}
       >
-        {/* Inner track — slides UP as messages fill the window */}
-        <div
-          ref={innerRef}
-          className="p-3 space-y-2.5"
-          style={{
-            transform: `translateY(-${offsetY}px)`,
-            transition: offsetY > 0 ? 'transform 0.45s cubic-bezier(0.4, 0, 0.2, 1)' : 'none',
-          }}
-        >
-          {visibleBubbles.map((bubble, i) => (
-            <ChatBubble key={i} bubble={bubble} />
-          ))}
+        {/* Header */}
+        <div className="bg-surface/80 px-4 py-3 flex items-center gap-3 border-b border-border/60">
+          <div className="w-8 h-8 rounded-full bg-brand-wa/20 flex items-center justify-center">{WA_ICON}</div>
+          <div className="flex-1">
+            <p className="text-xs font-bold text-tx-1">Tu Negocio</p>
+            <div className="flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-brand-green" />
+              <p className="text-xs text-tx-3">Asistente IA activo</p>
+            </div>
+          </div>
+          <div className="text-xs bg-brand-cyan/15 text-brand-cyan px-2 py-0.5 rounded-full font-bold">IA</div>
         </div>
-      </div>
 
-      {/* Input bar */}
-      <div className="px-3 py-2 border-t border-border/60 bg-surface/40" style={{ pointerEvents: 'none' }}>
-        <div className="flex items-center gap-2 bg-bg rounded-xl px-3 py-2">
-          <span className="text-xs text-tx-3 flex-1">Respuesta automática en segundos...</span>
-          <div className="flex gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-brand-cyan animate-pulse-dot" />
-            <span className="w-1.5 h-1.5 rounded-full bg-brand-cyan animate-pulse-dot" style={{ animationDelay: '0.3s' }} />
-            <span className="w-1.5 h-1.5 rounded-full bg-brand-cyan animate-pulse-dot" style={{ animationDelay: '0.6s' }} />
+        {/* Clip window */}
+        <div
+          ref={clipRef}
+          className={compact ? 'h-[260px]' : 'h-[300px]'}
+          style={{ overflow: 'hidden', pointerEvents: 'none' }}
+        >
+          <div
+            ref={innerRef}
+            className="p-3 space-y-2.5"
+            style={{
+              transform: `translateY(-${offsetY}px)`,
+              transition: offsetY > 0 ? 'transform 0.45s cubic-bezier(0.4, 0, 0.2, 1)' : 'none',
+            }}
+          >
+            {visibleBubbles.map((bubble, i) => (
+              <ChatBubble key={i} bubble={bubble} />
+            ))}
+          </div>
+        </div>
+
+        {/* Input bar */}
+        <div className="px-3 py-2 border-t border-border/60 bg-surface/40" style={{ pointerEvents: 'none' }}>
+          <div className="flex items-center gap-2 bg-bg rounded-xl px-3 py-2">
+            <span className="text-xs text-tx-3 flex-1">Respuesta automática en segundos...</span>
+            <div className="flex gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-brand-cyan animate-pulse-dot" />
+              <span className="w-1.5 h-1.5 rounded-full bg-brand-cyan animate-pulse-dot" style={{ animationDelay: '0.3s' }} />
+              <span className="w-1.5 h-1.5 rounded-full bg-brand-cyan animate-pulse-dot" style={{ animationDelay: '0.6s' }} />
+            </div>
           </div>
         </div>
       </div>
-    </motion.div>
+    </div>
   )
 }
 
 function CRMMini({ compact = false }: { compact?: boolean }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: compact ? 1.0 : 1.2, duration: 0.6 }}
-      className={`glass rounded-xl border border-border/70 p-4 ${!compact ? 'animate-float' : ''}`}
-      style={!compact ? { animationDelay: '2s' } : {}}
-    >
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-xs font-bold text-tx-1">Pipeline de ventas</span>
-        <span className="text-xs text-brand-green font-semibold">+23% este mes</span>
+    <div style={{ animation: `hero-fade-in-up 0.6s ease-out ${compact ? '1.0s' : '1.2s'} both` }}>
+      <div
+        className={`glass rounded-xl border border-border/70 p-4 ${!compact ? 'animate-float' : ''}`}
+        style={!compact ? { animationDelay: '2s' } : {}}
+      >
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-xs font-bold text-tx-1">Pipeline de ventas</span>
+          <span className="text-xs text-brand-green font-semibold">+23% este mes</span>
+        </div>
+        <div className="flex gap-2">
+          {[
+            { label: 'Nuevo',      count: 12, color: 'bg-brand-cyan' },
+            { label: 'Contactado', count: 8,  color: 'bg-brand-purple' },
+            { label: 'Propuesta',  count: 5,  color: 'bg-yellow-400' },
+            { label: 'Cerrado',    count: 3,  color: 'bg-brand-green' },
+          ].map((col, i) => (
+            <div key={i} className="flex-1 text-center">
+              <div className={`h-1.5 rounded-full ${col.color} mb-1.5`} />
+              <p className="text-xs font-bold text-tx-1">{col.count}</p>
+              <p className="text-tx-3" style={{ fontSize: '9px' }}>{col.label}</p>
+            </div>
+          ))}
+        </div>
       </div>
-      <div className="flex gap-2">
-        {[
-          { label: 'Nuevo',      count: 12, color: 'bg-brand-cyan' },
-          { label: 'Contactado', count: 8,  color: 'bg-brand-purple' },
-          { label: 'Propuesta',  count: 5,  color: 'bg-yellow-400' },
-          { label: 'Cerrado',    count: 3,  color: 'bg-brand-green' },
-        ].map((col, i) => (
-          <div key={i} className="flex-1 text-center">
-            <div className={`h-1.5 rounded-full ${col.color} mb-1.5`} />
-            <p className="text-xs font-bold text-tx-1">{col.count}</p>
-            <p className="text-tx-3" style={{ fontSize: '9px' }}>{col.label}</p>
-          </div>
-        ))}
-      </div>
-    </motion.div>
+    </div>
   )
 }
 
 export function Hero() {
-  const heroRef = useRef<HTMLElement>(null)
-  const isDesktop = useMediaQuery('(min-width: 1024px)')
-
-  const { scrollYProgress } = useScroll({
-    target: heroRef,
-    offset: ['start start', 'end start'],
-  })
-
-  // Parallax orbs — desktop only
-  const orbY1 = useTransform(scrollYProgress, [0, 1], ['0%', '-28%'])
-  const orbY2 = useTransform(scrollYProgress, [0, 1], ['0%', '-14%'])
-  // Fade text content on desktop only — NOT applied to mobile mockup
-  const contentOpacity = useTransform(scrollYProgress, [0, 0.6], [1, 0])
-
   return (
-    <section
-      id="inicio"
-      ref={heroRef}
-      className="relative bg-bg overflow-hidden"
-    >
+    <section id="inicio" className="relative bg-bg overflow-hidden">
       {/* Background glow */}
       <div className="absolute inset-0 bg-hero-radial pointer-events-none" />
 
-      {/* Parallax orbs — clipped inside section */}
-      {isDesktop && (
-        <>
-          <motion.div
-            style={{ y: orbY1 }}
-            className="absolute top-20 right-[10%] w-[420px] h-[420px] rounded-full bg-brand-purple/10 blur-[90px] pointer-events-none"
-          />
-          <motion.div
-            style={{ y: orbY2 }}
-            className="absolute bottom-10 left-[10%] w-[320px] h-[320px] rounded-full bg-brand-cyan/8 blur-[70px] pointer-events-none"
-          />
-        </>
-      )}
+      {/* Static orbs — desktop only, no scroll listener */}
+      <div className="hidden lg:block pointer-events-none" aria-hidden="true">
+        <div className="absolute top-20 right-[10%] w-[420px] h-[420px] rounded-full bg-brand-purple/10 blur-[90px]" />
+        <div className="absolute bottom-10 left-[10%] w-[320px] h-[320px] rounded-full bg-brand-cyan/8 blur-[70px]" />
+      </div>
 
-      {/* ── DESKTOP: two-column with opacity fade on scroll ── */}
-      <motion.div
-        style={isDesktop ? { opacity: contentOpacity } : undefined}
-        className="hidden lg:block relative max-w-7xl mx-auto px-6 lg:px-8 pt-32 pb-20"
-      >
+      {/* Desktop: two-column */}
+      <div className="hidden lg:block relative max-w-7xl mx-auto px-6 lg:px-8 pt-32 pb-20">
         <div className="grid lg:grid-cols-2 gap-20 items-center">
-          {/* Left — copy */}
           <DesktopCopy />
-          {/* Right — mockup */}
           <div className="flex flex-col gap-4">
-            <div className="flex items-center gap-2 justify-end mb-2">
+            <div
+              className="flex items-center gap-2 justify-end mb-2"
+              style={{ animation: 'hero-fade-in 0.5s ease-out 400ms both' }}
+            >
               <Zap size={12} className="text-brand-cyan" />
               <span className="text-xs text-tx-3 font-semibold">Respondido automáticamente en 2s</span>
             </div>
@@ -325,14 +298,16 @@ export function Hero() {
             <CRMMini />
           </div>
         </div>
-      </motion.div>
+      </div>
 
-      {/* ── MOBILE: stacked, NO opacity fade ever ── */}
+      {/* Mobile: stacked */}
       <div className="lg:hidden relative max-w-xl mx-auto px-4 pt-24 pb-10">
         <MobileCopy />
-        {/* Mockup — always at full opacity, never fades */}
         <div className="mt-8 space-y-3">
-          <div className="flex items-center gap-2">
+          <div
+            className="flex items-center gap-2"
+            style={{ animation: 'hero-fade-in 0.5s ease-out 300ms both' }}
+          >
             <Zap size={12} className="text-brand-cyan" />
             <span className="text-xs text-tx-3 font-semibold">Respondido automáticamente en 2s</span>
           </div>
@@ -344,51 +319,41 @@ export function Hero() {
   )
 }
 
-/* ── Shared copy blocks split to avoid duplication ── */
-
 function DesktopCopy() {
   return (
     <div>
-      <motion.div
-        initial={{ opacity: 0, y: 14 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0, duration: 0.5 }}
+      <div
         className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-cyan/8 border border-brand-cyan/20 mb-7"
+        style={{ animation: 'hero-fade-in-up 0.5s ease-out 0ms both' }}
       >
         <span className="w-1.5 h-1.5 rounded-full bg-brand-cyan animate-pulse-dot" />
         <span className="text-brand-cyan text-xs font-bold uppercase tracking-widest">
           Usado por +500 PyMEs mexicanas
         </span>
-      </motion.div>
+      </div>
 
-      <motion.h1
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1, duration: 0.55 }}
+      <h1
         className="text-5xl lg:text-6xl font-black text-tx-1 leading-[1.05] tracking-tight mb-5"
+        style={{ animation: 'hero-fade-in-up 0.55s ease-out 100ms both' }}
       >
         Automatiza tu WhatsApp.
         <br />
         <span className="gradient-text">Cierra más ventas,</span>
         <br />
         sin contratar a nadie más.
-      </motion.h1>
+      </h1>
 
-      <motion.p
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2, duration: 0.5 }}
+      <p
         className="text-lg text-tx-2 mb-7 leading-relaxed max-w-xl"
+        style={{ animation: 'hero-fade-in-up 0.5s ease-out 200ms both' }}
       >
         Frace Solutions crea tu asistente IA personalizado conectado a Boosfy para responder,
         agendar, dar seguimiento y organizar tus ventas desde WhatsApp.
-      </motion.p>
+      </p>
 
-      <motion.ul
-        initial={{ opacity: 0, y: 14 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.28, duration: 0.5 }}
+      <ul
         className="space-y-2.5 mb-9"
+        style={{ animation: 'hero-fade-in-up 0.5s ease-out 280ms both' }}
       >
         {TRUST_BULLETS.map((b, i) => (
           <li key={i} className="flex items-center gap-3">
@@ -398,25 +363,21 @@ function DesktopCopy() {
             <span className="text-sm text-tx-2">{b}</span>
           </li>
         ))}
-      </motion.ul>
+      </ul>
 
-      <motion.div
-        initial={{ opacity: 0, y: 14 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.36, duration: 0.5 }}
+      <div
         className="flex flex-row gap-4"
+        style={{ animation: 'hero-fade-in-up 0.5s ease-out 360ms both' }}
       >
         <CTAButtons />
-      </motion.div>
+      </div>
 
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.5, duration: 0.5 }}
+      <div
         className="flex items-center gap-4 mt-7"
+        style={{ animation: 'hero-fade-in 0.5s ease-out 500ms both' }}
       >
         <TrustAvatars />
-      </motion.div>
+      </div>
     </div>
   )
 }
@@ -424,58 +385,48 @@ function DesktopCopy() {
 function MobileCopy() {
   return (
     <div>
-      <motion.div
-        initial={{ opacity: 0, y: 14 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0, duration: 0.45 }}
+      <div
         className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-cyan/8 border border-brand-cyan/20 mb-6"
+        style={{ animation: 'hero-fade-in-up 0.45s ease-out 0ms both' }}
       >
         <span className="w-1.5 h-1.5 rounded-full bg-brand-cyan animate-pulse-dot" />
         <span className="text-brand-cyan text-xs font-bold uppercase tracking-widest">
           +500 PyMEs mexicanas
         </span>
-      </motion.div>
+      </div>
 
-      <motion.h1
-        initial={{ opacity: 0, y: 18 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.08, duration: 0.5 }}
+      <h1
         className="text-4xl sm:text-5xl font-black text-tx-1 leading-[1.08] tracking-tight mb-5"
+        style={{ animation: 'hero-fade-in-up 0.5s ease-out 80ms both' }}
       >
         Automatiza tu WhatsApp.
         <br />
         <span className="gradient-text">Cierra más ventas,</span>
         <br />
         sin contratar a nadie.
-      </motion.h1>
+      </h1>
 
-      <motion.p
-        initial={{ opacity: 0, y: 14 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.16, duration: 0.45 }}
+      <p
         className="text-base text-tx-2 mb-7 leading-relaxed"
+        style={{ animation: 'hero-fade-in-up 0.45s ease-out 160ms both' }}
       >
         Asistente IA personalizado conectado a Boosfy para responder, agendar y organizar
         tus ventas desde WhatsApp.
-      </motion.p>
+      </p>
 
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.24, duration: 0.45 }}
+      <div
         className="flex flex-col gap-3"
+        style={{ animation: 'hero-fade-in-up 0.45s ease-out 240ms both' }}
       >
         <CTAButtons />
-      </motion.div>
+      </div>
 
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.38, duration: 0.45 }}
+      <div
         className="flex items-center gap-4 mt-6"
+        style={{ animation: 'hero-fade-in 0.45s ease-out 380ms both' }}
       >
         <TrustAvatars />
-      </motion.div>
+      </div>
     </div>
   )
 }
