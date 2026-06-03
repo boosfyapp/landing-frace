@@ -2,6 +2,8 @@ export const LINKS = {
   calendly: 'https://calendly.com/fracesolutions/reunion',
   whatsapp: 'https://wa.me/5213418780011',
   waStarter: 'https://wa.me/5213418780011?text=Hola%2C%20quiero%20contratar%20el%20Plan%20Starter',
+  waPro: 'https://wa.me/5213418780011?text=Hola%2C%20quiero%20contratar%20el%20Plan%20PRO',
+  waUltimate: 'https://wa.me/5213418780011?text=Hola%2C%20quiero%20contratar%20el%20Plan%20Ultimate',
   waLifetime: 'https://wa.me/5213418780011?text=Hola%2C%20quiero%20informaci%C3%B3n%20sobre%20el%20Plan%20Lifetime',
   mpStarter: 'https://mpago.li/2ELwWJC',
   mpPro: 'https://mpago.li/1ta547h',
@@ -42,7 +44,7 @@ export const PLANS = [
     badge: 'Más solicitado',
     featured: true,
     cta: 'Comenzar ahora →',
-    link: LINKS.mpStarter,
+    link: LINKS.waPro,
     features: [
       'Asistente IA personalizado',
       'Agenda citas automáticamente',
@@ -62,7 +64,7 @@ export const PLANS = [
     badge: null,
     featured: false,
     cta: 'Elegir Ultimate →',
-    link: LINKS.mpPro,
+    link: LINKS.waUltimate,
     features: [
       'Todo lo del PRO',
       'Imágenes, docs, videos y audios',
