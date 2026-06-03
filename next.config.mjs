@@ -1,9 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
-  compress: true,
+  compress: false,
   images: {
     formats: ['image/avif', 'image/webp'],
+    unoptimized: true,
   },
 }
 
