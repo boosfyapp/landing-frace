@@ -22,9 +22,9 @@ export default function Page() {
       <Header />
       <main>
         <Hero />
+        <Features />
         <ProblemSolution />
         <Metrics />
-        <Features />
         <HowItWorks />
         <ROICalculator />
         <BoosifyMockup />
