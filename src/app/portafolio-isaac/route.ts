@@ -5,7 +5,7 @@ export const runtime = 'nodejs'
 
 export async function GET() {
   const portfolio = await readFile(
-    join(process.cwd(), 'public', 'portafolio', 'index.html'),
+    join(process.cwd(), 'public', 'portafolio-isaac', 'index.html'),
     'utf8',
   )
 
