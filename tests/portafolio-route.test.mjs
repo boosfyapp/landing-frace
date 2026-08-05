@@ -14,6 +14,7 @@ test('publishes Isaac portfolio at the /portafolio-isaac route with its visual a
   assert.match(portfolio, /<base href="\/portafolio-isaac\/"/, 'relative assets must resolve from the portfolio URL')
   assert.match(portfolio, /min-height:\s*44px/, 'project links must meet a mobile-friendly touch target')
   assert.match(portfolio, /\.project-card \.visual \{ height: 220px; \}/, 'mobile cards must use a compact visual height')
+  assert.match(portfolio, /\.tag \{(?=[^}]*width: fit-content)(?=[^}]*max-width: 100%)(?=[^}]*white-space: normal)/, 'mobile status labels must wrap inside the card instead of overflowing')
   assert.match(portfolio, /Frace Solutions \/ Proyectos recientes/, 'the portfolio must carry the Frace Solutions identity')
 
   for (const name of ['dform.png', 'contractoros.png', 'ai-academy.png', 'thu-talento.png', 'gorila-prime.png']) {
