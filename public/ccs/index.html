@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#091711">
   <meta name="robots" content="noindex, nofollow">
-  <title>CCS — Calculadora de cocos</title>
+  <title>CoCoS — Calculadora de cocos</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght,SOFT,WONK@9..144,500,20,1;9..144,600,20,1;9..144,700,20,1&display=swap" rel="stylesheet">
@@ -24,10 +24,8 @@
     .hero { display:grid; grid-template-columns:minmax(0,1fr) minmax(300px,.8fr); align-items:center; gap:40px; min-height:395px; }
     .eyebrow { display:inline-flex; align-items:center; gap:10px; color:var(--lime); text-transform:uppercase; letter-spacing:.22em; font-size:11px; font-weight:700; }
     .eyebrow::before { content:""; width:25px; height:1px; background:currentColor; }
-    h1,h2,p { margin-top:0; }
-    h1 { font-family:'Fraunces',Georgia,serif; font-size:clamp(55px,7.6vw,108px); line-height:.96; letter-spacing:-.075em; font-weight:600; margin:28px 0 25px; max-width:730px; }
-    h1 em { color:var(--lime); font-style:italic; }
-    .intro { max-width:510px; font-size:17px; line-height:1.65; color:var(--muted); margin-bottom:0; }
+    h2,p { margin-top:0; }
+    .intro { max-width:510px; font-size:17px; line-height:1.65; color:var(--muted); margin:24px 0 0; }
     .art { min-height:365px; display:grid; place-items:center; position:relative; isolation:isolate; }
     .art::before { content:""; width:77%; aspect-ratio:1; border:1px solid #b7d18d38; border-radius:50%; position:absolute; box-shadow:0 0 0 39px #b7d18d0c,0 0 0 79px #b7d18d08; }
     .art svg { position:relative; width:min(100%,445px); overflow:visible; filter:drop-shadow(8px 32px 20px #0009); }
@@ -76,21 +74,20 @@
     .precision { color:#8a4f32; font-weight:700; }
     footer { display:flex; justify-content:space-between; gap:15px; padding:24px 0 35px; color:#95ab99; border-top:1px solid #ffffff1c; font-size:11px; letter-spacing:.1em; text-transform:uppercase; }
     @media(max-width:900px) { .hero { grid-template-columns:1fr 280px; gap:5px; min-height:310px; } .art { min-height:270px; } .workspace { grid-template-columns:1fr 1fr; } .people { grid-template-columns:repeat(3,1fr); } .person:nth-child(3) { border:0; } .person:nth-child(n+4) { border-top:1px solid #1c352033; } .person:nth-child(4) { padding-left:0; } }
-    @media(max-width:670px) { .shell { width:min(100% - 36px,520px); } header { min-height:72px; } .header-note { display:none; } main { padding:43px 0 55px; } .hero { display:block; min-height:0; } h1 { font-size:clamp(52px,14vw,75px); margin:19px 0; } .intro { font-size:15px; } .art { min-height:210px; margin-top:15px; } .art svg { width:255px; } .art::before { width:185px; box-shadow:0 0 0 25px #b7d18d0c,0 0 0 50px #b7d18d08; } .workspace { grid-template-columns:1fr; gap:15px; margin-top:35px; } .input-card,.result-card { min-height:0; padding:25px; } .input-card { padding-bottom:23px; } .input-footer { margin-top:22px; } .result-card { min-height:320px; } .result-value { font-size:clamp(55px,12vw,73px); } .breakdown { padding:25px; } .breakdown-header { display:block; } .breakdown-note { margin-top:12px; } .people { grid-template-columns:repeat(2,minmax(0,1fr)); } .person,.person:first-child,.person:nth-child(4),.person:last-child { padding:20px 12px; border-top:1px solid #1c352033; border-right:0; } .person:nth-child(odd) { padding-left:0; border-right:1px solid #1c352033; } .person:nth-child(even) { padding-right:0; } .person:last-child { border-right:0; } .person-name { font-size:29px; } .person-amount { font-size:24px; } footer { flex-direction:column; line-height:1.5; } }
+    @media(max-width:670px) { .shell { width:min(100% - 36px,520px); } header { min-height:72px; } .header-note { display:none; } main { padding:43px 0 55px; } .hero { display:block; min-height:0; } .intro { font-size:15px; } .art { min-height:210px; margin-top:15px; } .art svg { width:255px; } .art::before { width:185px; box-shadow:0 0 0 25px #b7d18d0c,0 0 0 50px #b7d18d08; } .workspace { grid-template-columns:1fr; gap:15px; margin-top:35px; } .input-card,.result-card { min-height:0; padding:25px; } .input-card { padding-bottom:23px; } .input-footer { margin-top:22px; } .result-card { min-height:320px; } .result-value { font-size:clamp(55px,12vw,73px); } .breakdown { padding:25px; } .breakdown-header { display:block; } .breakdown-note { margin-top:12px; } .people { grid-template-columns:repeat(2,minmax(0,1fr)); } .person,.person:first-child,.person:nth-child(4),.person:last-child { padding:20px 12px; border-top:1px solid #1c352033; border-right:0; } .person:nth-child(odd) { padding-left:0; border-right:1px solid #1c352033; } .person:nth-child(even) { padding-right:0; } .person:last-child { border-right:0; } .person-name { font-size:29px; } .person-amount { font-size:24px; } footer { flex-direction:column; line-height:1.5; } }
     @media(prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } *,*::before,*::after { animation-duration:.01ms !important; transition-duration:.01ms !important; } }
   </style>
 </head>
 <body>
   <div class="shell">
     <header>
-      <a class="brand" href="/ccs" aria-label="CCS, inicio de la calculadora"><span class="brand-mark" aria-hidden="true">C</span><span>CCS<span style="color:var(--lime)">.</span></span></a>
+      <a class="brand" href="/ccs" aria-label="CoCoS, inicio de la calculadora"><span class="brand-mark" aria-hidden="true">C</span><span>CoCoS<span style="color:var(--lime)">.</span></span></a>
       <span class="header-note">La cuenta clara, coco por coco</span>
     </header>
     <main>
-      <section class="hero" aria-labelledby="hero-title">
+      <section class="hero" aria-label="Presentación de CoCoS">
         <div>
           <span class="eyebrow">Calculadora de distribución</span>
-          <h1 id="hero-title">Los números<br><em>en su punto.</em></h1>
           <p class="intro">Ingresa el monto real y descubre la referencia hipotética y la parte exacta que corresponde a cada persona.</p>
         </div>
         <div class="art" aria-hidden="true">
@@ -120,7 +117,7 @@
         <div class="clarity"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5m0-8v.5"/></svg><span id="clarity-text">El total hipotético es una referencia para comparar una parte individual. Las cinco partes suman el 100% del ingreso real.</span></div>
       </section>
     </main>
-    <footer><span>CCS · Calculadora de cocos</span><span>Clara desde el primer número</span></footer>
+    <footer><span>CoCoS · Calculadora de cocos</span><span>Clara desde el primer número</span></footer>
   </div>
   <script type="module">
     import { calculate } from '/ccs/calculator.mjs'
